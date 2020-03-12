@@ -8,47 +8,66 @@ const fs = require('fs');
 
 
 
-function escribirDatosMuseo(error, res) {
+function escribirDatosLugar(error, res) {
 
-  const museos = res.body.results;
+  console.log('descargando lugares')
+  const lugar = cargarLugar(res);
 
-  const datos = museos.map(m => {
-    return ('museos.txt', `${m.nombre} (${m.direccion}). por cualquier consulta comunicarse al ${m.telefono} \n`);
-  });
-
-  fs.writeFile('museos2.txt', datos, (error) => {
+  const datos = cargarDatosDeLugar(lugar);
+  console.log('cargando lugares');
+  fs.appendFile('lugares.txt', datos, (error) => {
     if (error) {
       throw new Error('algo se rompió', error);
     }
   })
+  console.log('terminado');
 
 
 }
 
+function leerDatosLugar() {
+  fs.readFile('lugares.txt', (error, data) => {
+    if (error) {
+      throw new Error('no existe el archivo', error);
+    }
+    console.log(chalk.green(data.toString()));
+  });
+}
 
-function imprimirDatosMuseo(error, res) {
-
-  const museos = res.body.results;
-
-  museos.forEach(museo => {
-
-    //desestructuracion de objetos
-    const { nombre, direccion, telefono } = museo;
-
-    fs.appendFile('museos.txt', `${nombre} (${direccion}). por cualquier consulta comunicarse al ${telefono} \n`,
-      () => {
-        if (error)
-          throw new Error("ups");
-      });
+function cargarDatosDeLugar(lugar) {
+  return lugar.map(l => {
+    return `${l.nombre} (${l.direccion}). Por cualquier consulta comunicarse al ${l.telefono} \n`;
   })
+}
 
+function cargarLugar(res) {
+  return res.body.results;
 }
 
 
-superagent
-  .get('https://www.cultura.gob.ar/api/v2.0/museos')
-  .query({ format: 'json' })
-  .end(escribirDatosMuseo);
+
+
+
+
+
+
+const escribirMuseo = () => {
+  superagent
+    .get('https://www.cultura.gob.ar/api/v2.0/museos')
+    .query({ format: 'json' })
+    .end(escribirDatosLugar);
+};
+
+const escribirOrganismo = () => {
+  superagent
+    .get('https://www.cultura.gob.ar/api/v2.0/organismos')
+    .query({ format: 'json' })
+    .end(escribirDatosLugar);
+};
+
+
+escribirOrganismo();
+leerDatosLugar();
 
 
 
